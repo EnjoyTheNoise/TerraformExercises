@@ -1,0 +1,54 @@
+{
+    "builders": [
+        {
+            "type": "azure-arm",
+            "client_id": "client_id",
+            "client_secret": "client_secret",
+            "tenant_id": "tenant_id",
+            "object_id": "object_id",
+            "subscription_id": "subscription_id",
+            "resource_group_name": "Storage",
+            "storage_account": "zettai",
+            "capture_container_name": "images",
+            "capture_name_prefix": "packer_",
+            "os_type": "Windows",
+            "image_publisher": "MicrosoftWindowsServer",
+            "image_offer": "WindowsServer",
+            "image_sku": "2016-Datacenter",
+            "communicator": "winrm",
+            "winrm_use_ssl": true,
+            "winrm_insecure": true,
+            "winrm_timeout": "1h",
+            "winrm_username": "packer",
+            "location": "West Europe",
+            "vm_size": "Standard_B1ms"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "powershell",
+            "inline": [
+                "WINRM QuickConfig -q"
+            ]
+        },
+        {
+            "type": "dsc",
+            "manifest_file": "..\\automation-acc\\vm-config.ps1",
+            "configuration_name": "VmConfig",
+            "install_package_management": true,
+            "install_modules": {
+                "xPSDesiredStateConfiguration": "6.4.0.0",
+                "xStorage": "3.4.0",
+                "xWebAdministration": "2.6.0",
+                "cChoco": "2.4.0"
+            }
+        },
+        {
+            "type": "powershell",
+            "inline": [
+                "if( Test-Path $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml ){ rm $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml -Force}",
+                "& $Env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /shutdown /quiet"
+            ]
+        }
+    ]
+}
